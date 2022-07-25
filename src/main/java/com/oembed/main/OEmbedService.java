@@ -16,15 +16,13 @@ public class OEmbedService {
 	}
 	
 	public String getProvider(String url) {
-		String host;
+		String host = null;
 		
 		try {
 			host = new URL(url).getHost();
 		} catch (MalformedURLException e) {
 			throw new RuntimeException("부정한 URL");
 		}
-		
-		if (host == null) throw new RuntimeException("host가 없음");
 		
 		return host;
 	}

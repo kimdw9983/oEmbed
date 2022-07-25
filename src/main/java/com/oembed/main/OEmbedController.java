@@ -1,9 +1,16 @@
 package com.oembed.main;
 
+import java.io.IOException;
 import java.nio.charset.Charset;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONObject;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -34,6 +41,18 @@ public class OEmbedController {
         
         return new ResponseEntity<>(message, headers, HttpStatus.OK);
     }
+	
+	@RequestMapping("/oembed")
+    public ResponseEntity<OEmbedMessage> help() {
+		OEmbedMessage message = new OEmbedMessage();
+        HttpHeaders headers= new HttpHeaders();
+        headers.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+        
+        message.setStatus(HttpStatus.OK);
+        message.setData("url을 입력해주세요");
+
+        return new ResponseEntity<>(message, headers, HttpStatus.OK);
+	}
 
 	@RequestMapping("/oembed/**")
     public ResponseEntity<OEmbedMessage> oembed(HttpServletRequest request) {
@@ -52,17 +71,34 @@ public class OEmbedController {
             return new ResponseEntity<>(message, headers, HttpStatus.FORBIDDEN);
         };
         
+        String provider;
         try {
-        	String provider =  OEmbedService.getProvider(url);
-        	message.setStatus(HttpStatus.OK);
-            message.setData(provider);
-        	
+        	provider = OEmbedService.getProvider(url);
         } catch (RuntimeException e) {
         	message.setStatus(HttpStatus.FORBIDDEN);
             message.setData(e.getMessage());
             
             return new ResponseEntity<>(message, headers, HttpStatus.FORBIDDEN);
         }
+        
+        try {
+        	provider = "https://www.youtube.com/oembed?url=";
+        	System.out.println(url);
+        	System.out.println(queryString);
+        	System.out.println(provider + url + "?" +  queryString);        	
+			HttpResponse response = HttpClientBuilder.create().build().execute(new HttpGet("https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=dBD54EZIrZo"));
+			 
+			String json_string = EntityUtils.toString(response.getEntity(), "UTF-8");
+			JSONObject temp1 = new JSONObject(json_string);
+			message.setData(json_string);
+			//message.setStatus(HttpStatus.OK);
+            //message.setData(oembedInfo);
+            
+		} catch (ClientProtocolException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
         return new ResponseEntity<>(message, headers, HttpStatus.OK);
     }
@@ -82,6 +118,7 @@ public class OEmbedController {
 			ResponseEntity<OEmbedMessage> result = restTemplate.exchange("http://127.0.0.1:8080/oembed/test", HttpMethod.GET, entity, OEmbedMessage.class);
 			message.setStatus(HttpStatus.FORBIDDEN);
 	        message.setData(result.getStatusCodeValue());
+	        
 		} catch (HttpClientErrorException e) {
 			message.setStatus(HttpStatus.FORBIDDEN);
 	        message.setData("잘못된 url");
