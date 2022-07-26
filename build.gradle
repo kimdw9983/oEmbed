@@ -30,8 +30,8 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	
 	implementation 'commons-validator:commons-validator:1.6'
-	implementation 'eu.michael-simons:java-oembed:0.4.1'
 	implementation 'org.json:json:20220320'
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
 }
 
 tasks.named('test') {
