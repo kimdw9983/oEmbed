@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +40,7 @@ public class OEmbedService {
 		try {
 			providers = mapper.readTree(new URL("https://oembed.com/providers.json"));
 		} catch (IOException e) {
-			System.out.println("Can't load providers from 'https://oembed.com/providers.json', trying to load local providers instead.");
+			logger.warn("Can't load providers from 'https://oembed.com/providers.json', trying to load local providers instead.");
 		}
 		
 		ClassLoader classLoader = getClass().getClassLoader();
@@ -48,36 +49,58 @@ public class OEmbedService {
         try {
 			providers = mapper.readTree(resource);
 		} catch (IOException e) {
-			logger.debug("[Fatal] Can't load providers.json in local. This application cannot service.");
+			logger.error("[Fatal] Can't load providers.json in local. This application cannot service.");
 		}
 	}
 	
-	public Boolean validateURL(String url) {
-		return urlValidator.isValid(url);
+	public void validateURL(String url) throws MalformedURLException {
+		if (!urlValidator.isValid(url)) {
+			logger.debug("Malformed URL\t" + url);
+			throw new MalformedURLException("Malformed url. 잘못된 url형식 입니다.");
+		}
 	}
 	
 	public String getProvider(String raw) throws URISyntaxException, RuntimeException, Exception { //search from providers.json
-		if (providers == null) throw new RuntimeException("Fatal error occurred on server, contact to developer. 서버에 심각한 오류가 발생하였습니다. 관리자에게 문의하세요.");
+		if (providers == null) {
+			logger.error("[Fatal] No providers.json found.");
+			throw new RuntimeException("Fatal error occurred on server, contact to developer. 서버에 심각한 오류가 발생하였습니다. 관리자에게 문의하세요.");
+		}
 		
 		URL url = null;
+		logger.debug("getProvider() raw \t" + raw);
 		try {
 			URI uri = new URI(raw);
 			url = new URL(uri.getScheme(), uri.getHost(), uri.getPort(), "/");
+			logger.debug("getProvider() constructed url\t" + url);
 		} catch (URISyntaxException | MalformedURLException e) {
+			logger.debug("Malformed URL \t" + raw);
 			throw new URISyntaxException(null, "Malformed URL. 형식에 맞지 않는 URL입력입니다.");
 		}
 
-		String result = null;
+		JsonNode provider = null;
 		Iterator<JsonNode> iter = providers.iterator();
 		while (iter.hasNext()) {
 			JsonNode node = iter.next();
 			String provider_url = node.get("provider_url").asText();
 			if (!provider_url.equals(url.toString()) && !provider_url.equals(url.toString().substring(0, url.toString().length() - 1))) continue;
+			logger.debug("getProvider() found node\t" + node);
 			
-			result = provider_url;
+			provider = node;
 		}
 		
-		System.out.println(result);
+		String result = null;
+		try {
+			JsonNode endpoints = (JsonNode) provider.get("endpoints");
+			for(Iterator<JsonNode> it = ((ArrayNode) endpoints).elements(); it.hasNext();) {
+				logger.debug(it.toString());
+				it.next();
+			}
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		logger.debug("getProvider() result\t" + result);
 		return result;
 	}
 
@@ -91,8 +114,10 @@ public class OEmbedService {
         	HttpGet httpget = new HttpGet(provider + url);
 			HttpResponse response = client.execute(httpget);
 			entity = response.getEntity();
+			//logger.debug("getOembedData()\tentity\t" + entity.toString());
 		} catch (IOException e) {
-			throw new ClientProtocolException("Error recieving response data. 응답 데이터 수신중에 오류가 발생했습니다.");
+			logger.warn("Error recieving response data, provider " + provider + " url " + url);
+			throw new IOException("Error recieving response data. 응답 데이터 수신중에 오류가 발생했습니다.");
 		}
         if (entity == null) throw new ClientProtocolException("응답 데이터가 없습니다.");
 		
@@ -100,8 +125,10 @@ public class OEmbedService {
     	try {
 			data = mapper.readValue(EntityUtils.toString(entity), Map.class);
     	} catch (JsonParseException e){ //결과값이 Map이 아닐경우 (e.g, "Bad Request", "Not Found") readValue에 실패하면서 발생 
+    		logger.debug("No content from given url\t" + url);
     		throw new ParseException("No content from given url. 해당 url에서 컨텐츠를 가져올 수 없습니다.");
 		} catch (IOException e) {
+			logger.warn("Error occurred processing reponse data\t" + url);
 			throw new IOException("Error occurred processing reponse data. 응답 데이터를 처리하는중에 오류가 발생했습니다.");
 		}
     	

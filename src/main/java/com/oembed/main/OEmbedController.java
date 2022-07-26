@@ -1,6 +1,7 @@
 package com.oembed.main;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.Map;
@@ -60,12 +61,14 @@ public class OEmbedController {
         HttpHeaders headers= new HttpHeaders();
         headers.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
         
-        if(!OEmbedService.validateURL(url)) { //url 유효성 체크
-            message.setStatus(HttpStatus.BAD_REQUEST);
-            message.setData("유효하지 않은 url입니다.");
-            
-            return new ResponseEntity<>(message, headers, HttpStatus.BAD_REQUEST);
-        };
+        try {
+			OEmbedService.validateURL(url);
+		} catch (MalformedURLException e) {
+			message.setStatus(HttpStatus.BAD_REQUEST);
+			message.setData(e.getMessage());
+			
+			return new ResponseEntity<>(message, headers, HttpStatus.BAD_REQUEST);
+		};
         
         String provider;
         try { //url에서 oembed요청을 보낼 provider 탐색
