@@ -1,7 +1,8 @@
 package com.oembed.main;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Map;
 
@@ -14,10 +15,10 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
-import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
@@ -25,31 +26,52 @@ public class OEmbedService {
 	private final String[] schemes = {"http", "https"};
 	private final UrlValidator urlValidator = new UrlValidator(schemes);
 	private final ObjectMapper mapper = new ObjectMapper();
-	private JSONObject providers = null;
+	private JsonNode providers = null;
 	
 	public OEmbedService() {
-		providers = loadProviders("https://oembed.com/providers.json");
-	}
-	
-	public JSONObject loadProviders(String url) {
+		try {
+			providers = mapper.readTree(new URL("https://oembed.com/providers.json"));
+		} catch (IOException e) {
+			System.out.println("https://oembed.com/providers.json에서 providers를 로드하지 못했습니다. 로컬 파일로 대체합니다.");
+		}
 		
-		return providers;
+		ClassLoader classLoader = getClass().getClassLoader();
+        URL resource = classLoader.getResource("providers.json");
+        
+        try {
+			providers = mapper.readTree(resource);
+		} catch (IOException e) {
+			System.out.println("[심각] providers.json 파일을 로드할 수 없습니다. 어플리케이션은 url에서 oembed provider를 구할 수 없습니다.");
+		}
 	}
 	
 	public Boolean validateURL(String url) {
 		return urlValidator.isValid(url);
 	}
 	
-	public String getProvider(String url) {
-		String host = null;
+	public String getProvider(String url) throws URISyntaxException, RuntimeException {
+		String provider = null;
+		if (providers == null) throw new RuntimeException("서버에 심각한 오류가 발생하였습니다.");
 		
 		try {
-			host = new URL(url).getHost();
-		} catch (MalformedURLException e) {
-			throw new RuntimeException("부정한 URL");
+			String host = new URI(url).getHost();
+			/*
+			 * java.net.URL has a bunch of problems -- its equals method does a DNS lookup.
+			 * http://foo.example.com => 245.10.10.1
+			 * http://example.com => 245.10.10.1
+			 * IP를 위와같이 바인딩했다고 가정하자. 이경우
+			 * 
+			 * URL("foo.example.com").equals(URL("example.com")) => true 
+			 * 두개의 url은 같은 것으로 취급되므로, 중간자 공격에 취약해진다. 따라서 URI를 사용한다.
+			 */
+			provider = host.startsWith("www.") ? host.substring(4) : host;
+		} catch (URISyntaxException e) {
+			throw new URISyntaxException(null, "형식에 맞지 않는 URL입력입니다.");
 		}
 		
-		return host;
+		
+		
+		return provider;
 	}
 
 	@SuppressWarnings("unchecked")

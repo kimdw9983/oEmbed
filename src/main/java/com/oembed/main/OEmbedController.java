@@ -1,6 +1,7 @@
 package com.oembed.main;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.Map;
 
@@ -67,6 +68,11 @@ public class OEmbedController {
         try { //url에서 oembed요청을 보낼 provider 탐색
         	provider = OEmbedService.getProvider(url);
         } catch (RuntimeException e) {
+        	message.setStatus(HttpStatus.SERVICE_UNAVAILABLE);
+            message.setData(e.getMessage());
+            
+            return new ResponseEntity<>(message, headers, HttpStatus.SERVICE_UNAVAILABLE);
+        } catch (URISyntaxException e) {
         	message.setStatus(HttpStatus.BAD_REQUEST);
             message.setData(e.getMessage());
             
