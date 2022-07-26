@@ -1,9 +1,11 @@
 package com.oembed.main;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.validator.routines.UrlValidator;
@@ -21,18 +23,23 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
 @Service
 public class OEmbedService {
 	private final String[] schemes = {"http", "https"};
 	private final UrlValidator urlValidator = new UrlValidator(schemes);
 	private final ObjectMapper mapper = new ObjectMapper();
+	public static final Logger logger = LoggerFactory.getLogger(OEmbedService.class.getPackage().getName());
 	private JsonNode providers = null;
 	
 	public OEmbedService() {
 		try {
 			providers = mapper.readTree(new URL("https://oembed.com/providers.json"));
 		} catch (IOException e) {
-			System.out.println("https://oembed.com/providers.json에서 providers를 로드하지 못했습니다. 로컬 파일로 대체합니다.");
+			System.out.println("Can't load providers from 'https://oembed.com/providers.json', trying to load local providers instead.");
 		}
 		
 		ClassLoader classLoader = getClass().getClassLoader();
@@ -41,7 +48,7 @@ public class OEmbedService {
         try {
 			providers = mapper.readTree(resource);
 		} catch (IOException e) {
-			System.out.println("[심각] providers.json 파일을 로드할 수 없습니다. 어플리케이션은 url에서 oembed provider를 구할 수 없습니다.");
+			logger.debug("[Fatal] Can't load providers.json in local. This application cannot service.");
 		}
 	}
 	
@@ -49,29 +56,29 @@ public class OEmbedService {
 		return urlValidator.isValid(url);
 	}
 	
-	public String getProvider(String url) throws URISyntaxException, RuntimeException {
-		String provider = null;
-		if (providers == null) throw new RuntimeException("서버에 심각한 오류가 발생하였습니다.");
+	public String getProvider(String raw) throws URISyntaxException, RuntimeException, Exception { //search from providers.json
+		if (providers == null) throw new RuntimeException("Fatal error occurred on server, contact to developer. 서버에 심각한 오류가 발생하였습니다. 관리자에게 문의하세요.");
 		
+		URL url = null;
 		try {
-			String host = new URI(url).getHost();
-			/*
-			 * java.net.URL has a bunch of problems -- its equals method does a DNS lookup.
-			 * http://foo.example.com => 245.10.10.1
-			 * http://example.com => 245.10.10.1
-			 * IP를 위와같이 바인딩했다고 가정하자. 이경우
-			 * 
-			 * URL("foo.example.com").equals(URL("example.com")) => true 
-			 * 두개의 url은 같은 것으로 취급되므로, 중간자 공격에 취약해진다. 따라서 URI를 사용한다.
-			 */
-			provider = host.startsWith("www.") ? host.substring(4) : host;
-		} catch (URISyntaxException e) {
-			throw new URISyntaxException(null, "형식에 맞지 않는 URL입력입니다.");
+			URI uri = new URI(raw);
+			url = new URL(uri.getScheme(), uri.getHost(), uri.getPort(), "/");
+		} catch (URISyntaxException | MalformedURLException e) {
+			throw new URISyntaxException(null, "Malformed URL. 형식에 맞지 않는 URL입력입니다.");
+		}
+
+		String result = null;
+		Iterator<JsonNode> iter = providers.iterator();
+		while (iter.hasNext()) {
+			JsonNode node = iter.next();
+			String provider_url = node.get("provider_url").asText();
+			if (!provider_url.equals(url.toString()) && !provider_url.equals(url.toString().substring(0, url.toString().length() - 1))) continue;
+			
+			result = provider_url;
 		}
 		
-		
-		
-		return provider;
+		System.out.println(result);
+		return result;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -85,7 +92,7 @@ public class OEmbedService {
 			HttpResponse response = client.execute(httpget);
 			entity = response.getEntity();
 		} catch (IOException e) {
-			throw new ClientProtocolException("응답 데이터 수신중에 오류가 발생했습니다.");
+			throw new ClientProtocolException("Error recieving response data. 응답 데이터 수신중에 오류가 발생했습니다.");
 		}
         if (entity == null) throw new ClientProtocolException("응답 데이터가 없습니다.");
 		
@@ -93,9 +100,9 @@ public class OEmbedService {
     	try {
 			data = mapper.readValue(EntityUtils.toString(entity), Map.class);
     	} catch (JsonParseException e){ //결과값이 Map이 아닐경우 (e.g, "Bad Request", "Not Found") readValue에 실패하면서 발생 
-    		throw new ParseException("해당 url에서 컨텐츠를 가져올 수 없습니다.");
+    		throw new ParseException("No content from given url. 해당 url에서 컨텐츠를 가져올 수 없습니다.");
 		} catch (IOException e) {
-			throw new IOException("응답 데이터를 처리하는중에 오류가 발생했습니다.");
+			throw new IOException("Error occurred processing reponse data. 응답 데이터를 처리하는중에 오류가 발생했습니다.");
 		}
     	
 		/*

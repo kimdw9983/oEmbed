@@ -29,9 +29,13 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	
+	implementation 'org.apache.httpcomponents:httpclient'
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
 	implementation 'commons-validator:commons-validator:1.6'
 	implementation 'org.json:json:20220320'
-	implementation 'com.fasterxml.jackson.core:jackson-databind'
+	
+	implementation 'org.slf4j:slf4j-api'
+	implementation 'org.slf4j:jcl-over-slf4j'
 }
 
 tasks.named('test') {

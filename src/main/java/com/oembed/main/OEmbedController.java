@@ -31,6 +31,9 @@ public class OEmbedController {
         HttpHeaders headers= new HttpHeaders();
         headers.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
         
+        message.setStatus(HttpStatus.OK);
+        message.setData("Enter url. url을 입력해주세요. e.g){domain}/oembed/https://www.youtube.com/watch?v=FtutLA63Cp8");
+        
         return new ResponseEntity<>(message, headers, HttpStatus.OK);
     }
 	
@@ -41,7 +44,7 @@ public class OEmbedController {
         headers.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
         
         message.setStatus(HttpStatus.OK);
-        message.setData("url을 입력해주세요");
+        message.setData("Enter url. url을 입력해주세요. e.g){domain}/oembed/https://www.youtube.com/watch?v=FtutLA63Cp8");
 
         return new ResponseEntity<>(message, headers, HttpStatus.OK);
 	}
@@ -77,6 +80,11 @@ public class OEmbedController {
             message.setData(e.getMessage());
             
             return new ResponseEntity<>(message, headers, HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+        	message.setStatus(HttpStatus.NOT_IMPLEMENTED);
+            message.setData(e.getMessage());
+            
+            return new ResponseEntity<>(message, headers, HttpStatus.NOT_IMPLEMENTED);
         }
         
     	Map<String, String> data = null;
