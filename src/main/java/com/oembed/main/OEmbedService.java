@@ -19,7 +19,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -82,7 +81,7 @@ public class OEmbedService {
 		try {
 			for(Iterator<JsonNode> iter = providers.iterator(); iter.hasNext();) {
 				JsonNode provider_node = iter.next();
-				logger.debug(provider_node.toString());
+				//logger.debug(provider_node.toString());
 
 				JsonNode endpoints_node = (JsonNode) provider_node.get("endpoints");
 				JsonNode endpoints = ((ArrayNode) endpoints_node).elements().next();
@@ -108,62 +107,32 @@ public class OEmbedService {
 					result = endpoints.get("url").asText();
 					return result;
 				}
-				
-	
-				// String provider_url = endpoints_node.get("provider_url").asText();
-				// result = provider_url;
-				// return result;
-				//if (!provider_url.equals(url.toString()) && !provider_url.equals(url.toString().substring(0, url.toString().length() - 1))) continue;
 			}
 		} catch(NullPointerException e) {
 			e.printStackTrace();
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
-		
-		
+
 		logger.debug("No provider found on URL\t" + raw);
 		throw new Exception("No provider found. 해당 url의 제공자가 없습니다.");
-
-		// 	//String result = null;
-		// 	try {
-		// 		JsonNode node = (JsonNode) provider.get("endpoints");
-		// 		JsonNode endpoints = ((ArrayNode) node).elements().next();
-		// 		ArrayNode schemes = (ArrayNode) endpoints.get("schemes");
-				
-		// 		String uriString = uri.toString();
-		// 		logger.debug("getProvider() uriString\t" + uriString);
-		// 		for(Iterator<JsonNode> iter = schemes.elements(); iter.hasNext();) {
-		// 			String scheme = iter.next().asText();
-		// 			String re = scheme.replace("/", "\\/").replace("*", ".*");
-		// 			if (!uriString.matches(re)) continue;
-
-		// 			result = endpoints.get("url").asText();	
-		// 			logger.debug("getProvider() provider found\t" + result);
-		// 			break;
-		// 		}
-		// 	} catch(Exception e) {
-		// 		logger.error("Url provider found but error occured during regex. \t");
-		// 		e.printStackTrace();
-		// 		throw new IOException("Error occured during scanning provider. 제공자를 찾는 도중 오류가 발생했습니다.");
-		// 	}
-		// 	if (result == null) {
-		// 		logger.debug("Url provider found but no matching regex\t" + raw);
-		// 		throw new Exception("No provider found. 해당 url의 제공자가 없습니다.");
-		// 	}
-			
-		// 	return result;
-		// }
 	}
 
 	@SuppressWarnings("unchecked")
 	public Map<String, String> getOembedData(String provider, String url) throws ClientProtocolException, IOException, ParseException {
-		provider = "https://www.youtube.com/oembed?url="; //TEST
+		String request_url;
+		if (provider.contains("*")) {
+			request_url = provider.replace("*", url);
+		} else {
+			provider = provider.replace("{format}", "json");
+			request_url = provider + (provider.endsWith("/") ? url : "?url=" + url);
+		}
+		logger.debug("request url\t" + request_url);
 
 		HttpEntity entity = null;
         try {
         	HttpClient client = HttpClientBuilder.create().build();
-        	HttpGet httpget = new HttpGet(provider + url);
+        	HttpGet httpget = new HttpGet(request_url);
 			HttpResponse response = client.execute(httpget);
 			entity = response.getEntity();
 			//logger.debug("getOembedData()\tentity\t" + entity.toString());
@@ -176,12 +145,9 @@ public class OEmbedService {
         Map<String, String> data = null;
     	try {
 			data = mapper.readValue(EntityUtils.toString(entity), Map.class);
-    	} catch (JsonParseException e){ //결과값이 Map이 아닐경우 (e.g, "Bad Request", "Not Found") readValue에 실패하면서 발생 
-    		logger.debug("No content from given url\t" + url);
-    		throw new ParseException("No content from given url. 해당 url에서 컨텐츠를 가져올 수 없습니다.");
 		} catch (IOException e) {
-			logger.warn("Error occurred processing reponse data\t" + url);
-			throw new IOException("Error occurred processing reponse data. 응답 데이터를 처리하는중에 오류가 발생했습니다.");
+			logger.debug("No content from given url\t" + url);
+    		throw new ParseException("No content from given url. 해당 url에서 컨텐츠를 가져올 수 없습니다.");
 		}
     	
 		/*
