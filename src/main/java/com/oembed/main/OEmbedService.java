@@ -60,16 +60,17 @@ public class OEmbedService {
 		}
 	}
 	
-	public String getProvider(String raw) throws URISyntaxException, RuntimeException, Exception { //search from providers.json
+	public String getProvider(String raw) throws URISyntaxException, RuntimeException, Exception, IOException { //search from providers.json, is this autodiscovery btw?
 		if (providers == null) {
 			logger.error("[Fatal] No providers.json found.");
-			throw new RuntimeException("Fatal error occurred on server, contact to developer. 서버에 심각한 오류가 발생하였습니다. 관리자에게 문의하세요.");
+			throw new RuntimeException("Fatal error occurred on server, please contact to developer. 서버에 심각한 오류가 발생하였습니다. 관리자에게 문의해주세요.");
 		}
 		
-		URL url = null;
+		URL url;
+		URI uri;
 		logger.debug("getProvider() raw \t" + raw);
 		try {
-			URI uri = new URI(raw);
+			uri = new URI(raw);
 			url = new URL(uri.getScheme(), uri.getHost(), uri.getPort(), "/");
 			logger.debug("getProvider() constructed url\t" + url);
 		} catch (URISyntaxException | MalformedURLException e) {
@@ -77,31 +78,82 @@ public class OEmbedService {
 			throw new URISyntaxException(null, "Malformed URL. 형식에 맞지 않는 URL입력입니다.");
 		}
 
-		JsonNode provider = null;
-		Iterator<JsonNode> iter = providers.iterator();
-		while (iter.hasNext()) {
-			JsonNode node = iter.next();
-			String provider_url = node.get("provider_url").asText();
-			if (!provider_url.equals(url.toString()) && !provider_url.equals(url.toString().substring(0, url.toString().length() - 1))) continue;
-			logger.debug("getProvider() found node\t" + node);
-			
-			provider = node;
-		}
-		
 		String result = null;
 		try {
-			JsonNode endpoints = (JsonNode) provider.get("endpoints");
-			for(Iterator<JsonNode> it = ((ArrayNode) endpoints).elements(); it.hasNext();) {
-				logger.debug(it.toString());
-				it.next();
+			for(Iterator<JsonNode> iter = providers.iterator(); iter.hasNext();) {
+				JsonNode provider_node = iter.next();
+				logger.debug(provider_node.toString());
+
+				JsonNode endpoints_node = (JsonNode) provider_node.get("endpoints");
+				JsonNode endpoints = ((ArrayNode) endpoints_node).elements().next();
+				ArrayNode schemes = (ArrayNode) endpoints.get("schemes");
+				
+				String uriString = uri.toString();
+				//logger.debug("getProvider() uriString\t" + uriString);
+				if (schemes != null) {
+					for(Iterator<JsonNode> iiter = schemes.elements(); iiter.hasNext();) {
+						String scheme = iiter.next().asText();
+						String re = scheme.replace("/", "\\/").replace("*", ".*");
+						if (!uriString.matches(re)) continue;
+						
+						logger.debug("getProvider() provider found\t" + endpoints.get("url"));
+						result = endpoints.get("url").asText();	
+						return result;
+					}
+				} else { //providers like Beautiful.AI has no schemes
+					String re = provider_node.get("provider_url").asText();
+					if (!uriString.matches(re)) continue;
+
+					logger.debug("getProvider() provider without scheme, found\t" + endpoints.get("url"));
+					result = endpoints.get("url").asText();
+					return result;
+				}
+				
+	
+				// String provider_url = endpoints_node.get("provider_url").asText();
+				// result = provider_url;
+				// return result;
+				//if (!provider_url.equals(url.toString()) && !provider_url.equals(url.toString().substring(0, url.toString().length() - 1))) continue;
 			}
-			
+		} catch(NullPointerException e) {
+			e.printStackTrace();
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
 		
-		logger.debug("getProvider() result\t" + result);
-		return result;
+		
+		logger.debug("No provider found on URL\t" + raw);
+		throw new Exception("No provider found. 해당 url의 제공자가 없습니다.");
+
+		// 	//String result = null;
+		// 	try {
+		// 		JsonNode node = (JsonNode) provider.get("endpoints");
+		// 		JsonNode endpoints = ((ArrayNode) node).elements().next();
+		// 		ArrayNode schemes = (ArrayNode) endpoints.get("schemes");
+				
+		// 		String uriString = uri.toString();
+		// 		logger.debug("getProvider() uriString\t" + uriString);
+		// 		for(Iterator<JsonNode> iter = schemes.elements(); iter.hasNext();) {
+		// 			String scheme = iter.next().asText();
+		// 			String re = scheme.replace("/", "\\/").replace("*", ".*");
+		// 			if (!uriString.matches(re)) continue;
+
+		// 			result = endpoints.get("url").asText();	
+		// 			logger.debug("getProvider() provider found\t" + result);
+		// 			break;
+		// 		}
+		// 	} catch(Exception e) {
+		// 		logger.error("Url provider found but error occured during regex. \t");
+		// 		e.printStackTrace();
+		// 		throw new IOException("Error occured during scanning provider. 제공자를 찾는 도중 오류가 발생했습니다.");
+		// 	}
+		// 	if (result == null) {
+		// 		logger.debug("Url provider found but no matching regex\t" + raw);
+		// 		throw new Exception("No provider found. 해당 url의 제공자가 없습니다.");
+		// 	}
+			
+		// 	return result;
+		// }
 	}
 
 	@SuppressWarnings("unchecked")

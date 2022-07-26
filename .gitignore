@@ -1,5 +1,5 @@
-# Created by https://www.toptal.com/developers/gitignore/api/git,java,eclipse,gradle
-# Edit at https://www.toptal.com/developers/gitignore?templates=git,java,eclipse,gradle
+# Created by https://www.toptal.com/developers/gitignore/api/git,java,eclipse,gradle,visualstudiocode
+# Edit at https://www.toptal.com/developers/gitignore?templates=git,java,eclipse,gradle,visualstudiocode
 
 ### Eclipse ###
 .metadata
@@ -108,6 +108,31 @@ local.properties
 hs_err_pid*
 replay_pid*
 
+### VisualStudioCode ###
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+
+# Local History for Visual Studio Code
+.history/
+
+# Built Visual Studio Code Extensions
+*.vsix
+
+### VisualStudioCode Patch ###
+# Ignore all local history of files
+.history
+.ionide
+
+# Support for Project snippet scope
+.vscode/*.code-snippets
+
+# Ignore code-workspaces
+*.code-workspace
+
 ### Gradle ###
 .gradle
 **/build/
@@ -131,4 +156,4 @@ gradle-app.setting
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
 
-# End of https://www.toptal.com/developers/gitignore/api/git,java,eclipse,gradle
+# End of https://www.toptal.com/developers/gitignore/api/git,java,eclipse,gradle,visualstudiocode

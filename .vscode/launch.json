@@ -1,0 +1,17 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-OEmbedApplication<oEmbed>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.oembed.main.OEmbedApplication",
+            "projectName": "oEmbed",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env",
+            "env": {
+                "logging.level.com.oembed": "DEBUG",
+            },
+        }
+    ]
+}

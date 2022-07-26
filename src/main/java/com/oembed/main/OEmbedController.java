@@ -83,6 +83,11 @@ public class OEmbedController {
             message.setData(e.getMessage());
             
             return new ResponseEntity<>(message, headers, HttpStatus.BAD_REQUEST);
+        } catch (IOException e) {
+            message.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+            message.setData(e.getMessage());
+            
+            return new ResponseEntity<>(message, headers, HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e) {
         	message.setStatus(HttpStatus.NOT_IMPLEMENTED);
             message.setData(e.getMessage());
@@ -94,10 +99,10 @@ public class OEmbedController {
 		try {
 			data = OEmbedService.getOembedData(provider, url);
 		} catch (ParseException e) {
-			message.setStatus(HttpStatus.NO_CONTENT);
+			message.setStatus(HttpStatus.NOT_IMPLEMENTED);
 	        message.setData(e.getMessage());
 	        
-	        return new ResponseEntity<>(message, headers, HttpStatus.INTERNAL_SERVER_ERROR);
+	        return new ResponseEntity<>(message, headers, HttpStatus.NOT_IMPLEMENTED);
 		} catch (ClientProtocolException e) {
 			message.setStatus(HttpStatus.NOT_IMPLEMENTED);
             message.setData(e.getMessage());
