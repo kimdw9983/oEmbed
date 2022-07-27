@@ -3,7 +3,6 @@ package com.oembed.main;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.Map;
 
