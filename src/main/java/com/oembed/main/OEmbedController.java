@@ -3,6 +3,7 @@ package com.oembed.main;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.Map;
 
@@ -10,6 +11,8 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.http.ParseException;
 import org.apache.http.client.ClientProtocolException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -21,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class OEmbedController {
 	private final OEmbedService OEmbedService;
+    public static final Logger logger = LoggerFactory.getLogger(OEmbedService.class.getPackage().getName());
 	
 	public OEmbedController(OEmbedService OEmbedService) {
 		this.OEmbedService = new OEmbedService();
@@ -50,13 +54,17 @@ public class OEmbedController {
         return new ResponseEntity<>(message, headers, HttpStatus.OK);
 	}
 
-	@RequestMapping("/oembed/**")
+	@GetMapping("/oembed/**")
     public ResponseEntity<OEmbedMessage> oembed(HttpServletRequest request) {
 		String requestURL = request.getRequestURL().toString();
 		String url = requestURL.split("/oembed/")[1];
 		String query = request.getQueryString();
+        if (url.contains(":/") && !url.contains("://")){ //원인 못찾음. 임시 해결
+            url = url.replace(":/", "://");
+        }
 		if (query != null) url = url + "?" + query;
-		
+		logger.warn(url);
+
 		OEmbedMessage message = new OEmbedMessage();
         HttpHeaders headers= new HttpHeaders();
         headers.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));

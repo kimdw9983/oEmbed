@@ -130,9 +130,9 @@ public class OEmbedService {
 		logger.debug("request url\t" + request_url);
 
 		HttpEntity entity = null;
-        try {
-        	HttpClient client = HttpClientBuilder.create().build();
-        	HttpGet httpget = new HttpGet(request_url);
+		try {
+			HttpClient client = HttpClientBuilder.create().build();
+			HttpGet httpget = new HttpGet(request_url);
 			HttpResponse response = client.execute(httpget);
 			entity = response.getEntity();
 			//logger.debug("getOembedData()\tentity\t" + entity.toString());
@@ -140,14 +140,14 @@ public class OEmbedService {
 			logger.warn("Error recieving response data, provider " + provider + " url " + url);
 			throw new IOException("Error recieving response data. 응답 데이터 수신중에 오류가 발생했습니다.");
 		}
-        if (entity == null) throw new ClientProtocolException("응답 데이터가 없습니다.");
-		
-        Map<String, String> data = null;
-    	try {
+		if (entity == null) throw new ClientProtocolException("응답 데이터가 없습니다.");
+
+		Map<String, String> data = null;
+		try {
 			data = mapper.readValue(EntityUtils.toString(entity), Map.class);
 		} catch (IOException e) {
 			logger.debug("No content from given url\t" + url);
-    		throw new ParseException("No content from given url. 해당 url에서 컨텐츠를 가져올 수 없습니다.");
+			throw new ParseException("No content from given url. 해당 url에서 컨텐츠를 가져올 수 없습니다.");
 		}
     	
 		/*
