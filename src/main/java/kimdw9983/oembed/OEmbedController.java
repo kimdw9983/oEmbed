@@ -1,4 +1,4 @@
-package com.oembed.main;
+package kimdw9983.oembed;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
