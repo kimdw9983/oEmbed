@@ -8,12 +8,20 @@ Lightweight, Restful OEmbed api server implementation.
 - Using up-to-date [providers.json](https://oembed.com/providers.json).
 
 ## How to use?
-- Build and run a server first. And it will respond to basic HTTP requests.
+- Build and run this api server first. And it will respond to basic HTTP requests.
 
-### Example(on CLI)
+```
+GET {api_server_url}:8080/oembed/{url}
+```
+
+### Example
+if you have run server on your local in Spring Boot, you can simply test it on CMD.
 ```
 curl localhost:8080/oembed/https://youtu.be/FtutLA63Cp8
 ```
+
+or Postman
+![image](https://user-images.githubusercontent.com/93891414/181404845-7998f4bd-fb56-42a1-a6f5-bab0c419d97d.png)
 
 and respond will be like this:
 ```
