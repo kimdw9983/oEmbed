@@ -35,4 +35,4 @@ then respond will be like this:
 
 ## TODO & ISSUE(sort of)
 - Custom exception handling, currently this uses random exceptions raised by internal logic.
-- [Instagram currently requires credentials](https://developers.facebook.com/docs/instagram/oembed/) for responding OEmbed, supporting it.
+- [Instagram and some facebook content currently require credentials](https://developers.facebook.com/docs/instagram/oembed/) for responding OEmbed, supporting it.
