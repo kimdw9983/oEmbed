@@ -1,12 +1,12 @@
 # oEmbed
-Lightweight, Restful OEmbed api server implementation.
+Lightweight, Restful oEmbed api server implementation.
 
 ## What does this do?
-- Implementation of [OEmbed](https://oembed.com/).
+- Implementation of [oEmbed](https://oembed.com/).
 - Basic url validation. It can handle url only with `http` and `https` protocol.
 - Raises correspond errors to response via Http status code with messages, if any. \
 ` e.g) BAD_REQUEST(MalformedURL, not valid URI), NOT_IMPLEMENTED(No content from URL, no providers found)`
-- Automatically finds OEmbed data from given url, by parsing provider_url, url schemes.
+- Automatically finds oEmbed data from given url, by parsing provider_url, url schemes.
 - Using up-to-date [providers.json](https://oembed.com/providers.json).
 
 ## How to use?
@@ -38,4 +38,4 @@ then respond (body) will be like this:
 
 ## TODO & ISSUE(sort of)
 - Custom exception handling, currently this uses random exceptions raised by internal logic.
-- [Instagram and some facebook content currently require credentials](https://developers.facebook.com/docs/instagram/oembed/) for responding OEmbed, supporting it.
+- [Instagram and some facebook content currently require credentials](https://developers.facebook.com/docs/instagram/oembed/) for responding oEmbed, supporting it.
