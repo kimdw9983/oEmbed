@@ -62,7 +62,6 @@ public class OEmbedController {
             url = url.replace(":/", "://");
         }
 		if (query != null) url = url + "?" + query;
-		logger.warn(url);
 
 		OEmbedMessage message = new OEmbedMessage();
         HttpHeaders headers= new HttpHeaders();

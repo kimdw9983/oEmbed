@@ -43,9 +43,9 @@ public class OEmbedService {
 		}
 		
 		ClassLoader classLoader = getClass().getClassLoader();
-        URL resource = classLoader.getResource("providers.json");
+		URL resource = classLoader.getResource("providers.json");
         
-        try {
+		try {
 			providers = mapper.readTree(resource);
 		} catch (IOException e) {
 			logger.error("[Fatal] Can't load providers.json in local. This application cannot service.");
@@ -81,37 +81,35 @@ public class OEmbedService {
 		try {
 			for(Iterator<JsonNode> iter = providers.iterator(); iter.hasNext();) {
 				JsonNode provider_node = iter.next();
-				//logger.debug(provider_node.toString());
-
 				JsonNode endpoints_node = (JsonNode) provider_node.get("endpoints");
-				JsonNode endpoints = ((ArrayNode) endpoints_node).elements().next();
-				ArrayNode schemes = (ArrayNode) endpoints.get("schemes");
-				
 				String uriString = uri.toString();
-				//logger.debug("getProvider() uriString\t" + uriString);
-				if (schemes != null) {
-					for(Iterator<JsonNode> iiter = schemes.elements(); iiter.hasNext();) {
-						String scheme = iiter.next().asText();
-						String re = scheme.replace("/", "\\/").replace("*", ".*");
+				for(Iterator<JsonNode> iiter = ((ArrayNode) endpoints_node).elements(); iiter.hasNext();) {
+					JsonNode endpoint = iiter.next();
+					ArrayNode schemes = (ArrayNode) endpoint.get("schemes");
+					if (schemes != null) {
+						for(Iterator<JsonNode> iiiter = schemes.elements(); iiiter.hasNext();) {
+							String scheme = iiiter.next().asText();
+							String re = scheme.replace(".{format}", ".json").replace("/", "\\/").replace("*", ".*");
+							if (!uriString.matches(re)) continue;
+							
+							logger.debug("getProvider() provider found\t" + endpoint.get("url"));
+							result = endpoint.get("url").asText();	
+							return result;
+						}
+					}	else { //case when there's no scheme definition on endpoint like beautiful.ai, boxofficebuz.com
+						String re = provider_node.get("provider_url").asText();
 						if (!uriString.matches(re)) continue;
 						
-						logger.debug("getProvider() provider found\t" + endpoints.get("url"));
-						result = endpoints.get("url").asText();	
+						logger.debug("getProvider() provider without scheme, found\t" + endpoint.get("url"));
+						result = endpoint.get("url").asText();
 						return result;
 					}
-				} else { //providers like Beautiful.AI has no schemes
-					String re = provider_node.get("provider_url").asText();
-					if (!uriString.matches(re)) continue;
-
-					logger.debug("getProvider() provider without scheme, found\t" + endpoints.get("url"));
-					result = endpoints.get("url").asText();
-					return result;
 				}
 			}
-		} catch(NullPointerException e) {
-			e.printStackTrace();
 		} catch(Exception e) {
-			e.printStackTrace();
+			logger.error("Provider fetch failed");
+			logger.error(e.getMessage());
+			throw new IOException("Error occurred during fetching providers. 제공자 정보를 불러오는중에 오류가 발생했습니다.");
 		}
 
 		logger.debug("No provider found on URL\t" + raw);
@@ -135,9 +133,9 @@ public class OEmbedService {
 			HttpGet httpget = new HttpGet(request_url);
 			HttpResponse response = client.execute(httpget);
 			entity = response.getEntity();
-			//logger.debug("getOembedData()\tentity\t" + entity.toString());
 		} catch (IOException e) {
-			logger.warn("Error recieving response data, provider " + provider + " url " + url);
+			logger.error("Error on recieving response data, provider " + provider + " url " + url);
+			logger.error(e.getMessage());
 			throw new IOException("Error recieving response data. 응답 데이터 수신중에 오류가 발생했습니다.");
 		}
 		if (entity == null) throw new ClientProtocolException("응답 데이터가 없습니다.");
