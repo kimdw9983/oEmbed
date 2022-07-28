@@ -38,4 +38,3 @@ then respond will be like this:
 - [Instagram currently [=requires credentials](https://developers.facebook.com/docs/instagram/oembed/) for responding OEmbed, supporting it.
 - Renaming package name?
 - Handling multiple endpoints in one provider(like facebook).
-- Adding Licenses. :|
