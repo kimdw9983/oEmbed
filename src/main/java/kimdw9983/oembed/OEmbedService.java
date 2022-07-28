@@ -37,6 +37,16 @@ public class OEmbedService {
 	
 	public OEmbedService() {
 		try {
+			importProviders();
+		} catch (IOException e) {
+			logger.error("[Fatal] Can't load providers.json in local. This application cannot service!!!");
+			logger.error("[Fatal] Can't load providers.json in local. This application cannot service!!!");
+			logger.error("[Fatal] Can't load providers.json in local. This application cannot service!!!");
+		}
+	}
+
+	public void importProviders() throws IOException {
+		try {
 			providers = mapper.readTree(new URL("https://oembed.com/providers.json"));
 		} catch (IOException e) {
 			logger.warn("Can't load providers from 'https://oembed.com/providers.json', trying to load local providers instead.");
@@ -44,12 +54,8 @@ public class OEmbedService {
 		
 		ClassLoader classLoader = getClass().getClassLoader();
 		URL resource = classLoader.getResource("providers.json");
-        
-		try {
-			providers = mapper.readTree(resource);
-		} catch (IOException e) {
-			logger.error("[Fatal] Can't load providers.json in local. This application cannot service.");
-		}
+
+		providers = mapper.readTree(resource);
 	}
 	
 	public void validateURL(String url) throws MalformedURLException {
