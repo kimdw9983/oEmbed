@@ -14,7 +14,7 @@ Lightweight, Restful oEmbed api server implementation.
 - Build and run this api server first. And it will respond to basic HTTP requests.
 - Of course it should be able to connect to those providers in list -> https://oembed.com/providers.json
 
-
+### Usage
 ```
 GET {api_server_url}:8080/oembed/{url}
 ```
