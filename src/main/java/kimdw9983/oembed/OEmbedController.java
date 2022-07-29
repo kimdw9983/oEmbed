@@ -22,121 +22,76 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class OEmbedController {
-	private final OEmbedService OEmbedService;
+    private final OEmbedService OEmbedService;
     public static final Logger logger = LoggerFactory.getLogger(OEmbedService.class.getPackage().getName());
-	
-	public OEmbedController(OEmbedService OEmbedService) {
-		this.OEmbedService = new OEmbedService();
-	}
-	
-	@RequestMapping("/")
-    public ResponseEntity<OEmbedMessage> index() {
-		OEmbedMessage message = new OEmbedMessage();
-        HttpHeaders headers= new HttpHeaders();
-        headers.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
-        
-        message.setStatus(HttpStatus.OK);
-        message.setData("Enter url. url을 입력해주세요. e.g){domain}/oembed/https://www.youtube.com/watch?v=FtutLA63Cp8");
-        
-        return new ResponseEntity<>(message, headers, HttpStatus.OK);
+    
+    public OEmbedController(OEmbedService OEmbedService) {
+        this.OEmbedService = new OEmbedService();
     }
-	
-	@RequestMapping("/oembed")
-    public ResponseEntity<OEmbedMessage> help() {
-		OEmbedMessage message = new OEmbedMessage();
+
+    private ResponseEntity<OEmbedMessage> respond(Object data, HttpStatus status) {
+        OEmbedMessage message = new OEmbedMessage();
         HttpHeaders headers= new HttpHeaders();
         headers.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
-        
-        message.setStatus(HttpStatus.OK);
-        message.setData("Enter url. url을 입력해주세요. e.g){domain}/oembed/https://www.youtube.com/watch?v=FtutLA63Cp8");
+
+        message.setStatus(status);
+        message.setData(data);
 
         return new ResponseEntity<>(message, headers, HttpStatus.OK);
-	}
-
-	@GetMapping("/oembed/**")
-    public ResponseEntity<OEmbedMessage> oembed(HttpServletRequest request) {
-		String requestURL = request.getRequestURL().toString();
-		String url = requestURL.split("/oembed/")[1];
-		String query = request.getQueryString();
-        if (url.contains(":/") && !url.contains("://")){ //원인 못찾음. 임시 해결
-            url = url.replace(":/", "://");
-        }
-		if (query != null) url = url + "?" + query;
-
-		OEmbedMessage message = new OEmbedMessage();
-        HttpHeaders headers= new HttpHeaders();
-        headers.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
-        
-        try {
-			OEmbedService.validateURL(url);
-		} catch (MalformedURLException e) {
-			message.setStatus(HttpStatus.BAD_REQUEST);
-			message.setData(e.getMessage());
-			
-			return new ResponseEntity<>(message, headers, HttpStatus.BAD_REQUEST);
-		};
-        
-        String provider;
-        try { //url에서 oembed요청을 보낼 provider 탐색
-        	provider = OEmbedService.getProvider(url);
-        } catch (RuntimeException e) {
-        	message.setStatus(HttpStatus.SERVICE_UNAVAILABLE);
-            message.setData(e.getMessage());
-            
-            return new ResponseEntity<>(message, headers, HttpStatus.SERVICE_UNAVAILABLE);
-        } catch (URISyntaxException e) {
-        	message.setStatus(HttpStatus.BAD_REQUEST);
-            message.setData(e.getMessage());
-            
-            return new ResponseEntity<>(message, headers, HttpStatus.BAD_REQUEST);
-        } catch (IOException e) {
-            message.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-            message.setData(e.getMessage());
-            
-            return new ResponseEntity<>(message, headers, HttpStatus.INTERNAL_SERVER_ERROR);
-        } catch (Exception e) {
-        	message.setStatus(HttpStatus.NOT_IMPLEMENTED);
-            message.setData(e.getMessage());
-            
-            return new ResponseEntity<>(message, headers, HttpStatus.NOT_IMPLEMENTED);
-        }
-        
-    	Map<String, String> data = null;
-		try {
-			data = OEmbedService.getOembedData(provider, url);
-		} catch (ParseException e) {
-			message.setStatus(HttpStatus.NOT_IMPLEMENTED);
-	        message.setData(e.getMessage());
-	        
-	        return new ResponseEntity<>(message, headers, HttpStatus.NOT_IMPLEMENTED);
-		} catch (ClientProtocolException e) {
-			message.setStatus(HttpStatus.NOT_IMPLEMENTED);
-            message.setData(e.getMessage());
-            
-            return new ResponseEntity<>(message, headers, HttpStatus.NOT_IMPLEMENTED);
-		}  catch (IOException e) {
-			message.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-            message.setData(e.getMessage());
-            
-            return new ResponseEntity<>(message, headers, HttpStatus.INTERNAL_SERVER_ERROR);
-		} 
-		
-        message.setStatus(HttpStatus.OK);
-		message.setData(data);
-		
-        return new ResponseEntity<>(message, headers, HttpStatus.OK);
-    }
-	
-	@GetMapping(value = "/test")
-    public ResponseEntity<OEmbedMessage> test() {
-		OEmbedMessage message = new OEmbedMessage();
-        HttpHeaders headers= new HttpHeaders();
-        headers.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
-
-        return new ResponseEntity<>(message, headers, HttpStatus.BAD_REQUEST);
     }
     
-    //Instagram Access Token issue
-    //com.oembed.main -> com.oembed.api
+    @RequestMapping("/")
+    public ResponseEntity<OEmbedMessage> index() {
+        String data = "Enter url. url을 입력해주세요. e.g){domain}/oembed/https://www.youtube.com/watch?v=FtutLA63Cp8";
 
+        return respond(data, HttpStatus.OK);
+    }
+    
+    @RequestMapping("/oembed")
+    public ResponseEntity<OEmbedMessage> help() {
+        String data = "Enter url. url을 입력해주세요. e.g){domain}/oembed/https://www.youtube.com/watch?v=FtutLA63Cp8";
+        return respond(data, HttpStatus.OK);
+    }
+
+    @GetMapping("/oembed/**")
+    public ResponseEntity<OEmbedMessage> oembed(HttpServletRequest request) {
+        String requestURL = request.getRequestURL().toString();
+        String url = requestURL.split("/oembed/")[1];
+        String query = request.getQueryString();
+
+        if (url.contains(":/") && !url.contains("://")) url = url.replace(":/", "://");
+        if (query != null) url = url + "?" + query;
+
+        try {
+            OEmbedService.validateURL(url);
+        } catch (MalformedURLException e) {
+            return respond(e.getMessage(), HttpStatus.BAD_REQUEST);
+        };
+        
+        String provider;
+        try {
+            provider = OEmbedService.getProvider(url);
+        } catch (RuntimeException e) {
+            return respond(e.getMessage(), HttpStatus.SERVICE_UNAVAILABLE);
+        } catch (URISyntaxException e) {
+            return respond(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (IOException e) {
+            return respond(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (Exception e) {
+            return respond(e.getMessage(), HttpStatus.NOT_IMPLEMENTED);
+        }
+        
+        Map<String, String> data = null;
+        try {
+            data = OEmbedService.getOembedData(provider, url);
+        } catch (ParseException e) {
+            return respond(e.getMessage(), HttpStatus.NOT_IMPLEMENTED);
+        } catch (ClientProtocolException e) {
+            return respond(e.getMessage(), HttpStatus.NOT_IMPLEMENTED);
+        }  catch (IOException e) {
+            return respond(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        } 
+        
+        return respond(data, HttpStatus.OK);
+    }
 }

@@ -26,7 +26,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 @Service
 public class OEmbedService {
 	private final String[] schemes = {"http", "https"};
