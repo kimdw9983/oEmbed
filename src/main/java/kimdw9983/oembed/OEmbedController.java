@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class OEmbedController {
     private final OEmbedService OEmbedService;
-    public static final Logger logger = LoggerFactory.getLogger(OEmbedService.class.getPackage().getName());
+    public static final Logger logger = LoggerFactory.getLogger(OEmbedController.class.getPackage().getName());
     
     public OEmbedController(OEmbedService OEmbedService) {
         this.OEmbedService = new OEmbedService();
