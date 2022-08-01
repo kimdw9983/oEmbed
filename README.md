@@ -10,8 +10,8 @@ Lightweight, Restful oEmbed api server implementation.
 - Using up-to-date [providers.json](https://oembed.com/providers.json).
 
 ## How to use?
-- Import your project as Gradle.
-- Build and run this api server first. And it will respond to basic HTTP requests.
+- Import project as Gradle.
+- Build and run this api server and it will respond to basic HTTP requests.
 - Of course it should be able to connect to those providers in list -> https://oembed.com/providers.json
 
 ### Usage
