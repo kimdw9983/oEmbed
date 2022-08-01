@@ -10,8 +10,8 @@ Lightweight, Restful oEmbed api server implementation.
 - Using up-to-date [providers.json](https://oembed.com/providers.json).
 
 ## How to use?
-- Import your project as Gradle.
-- Build and run this api server first. And it will respond to basic HTTP requests.
+- Import project as Gradle.
+- Build and run this api server and it will respond to basic HTTP requests.
 - Of course it should be able to connect to those providers in list -> https://oembed.com/providers.json
 
 ### Usage
@@ -30,7 +30,24 @@ or Postman
 
 then respond (body) will be like this:
 ```
-{"status":"OK","data":{"title":"【東方】Bad Apple!! ＰＶ【影絵】","author_name":"kasidid2","author_url":"https://www.youtube.com/user/kasidid2","type":"video","height":150,"width":200,"version":"1.0","provider_name":"YouTube","provider_url":"https://www.youtube.com/","thumbnail_height":360,"thumbnail_width":480,"thumbnail_url":"https://i.ytimg.com/vi/FtutLA63Cp8/hqdefault.jpg","html":"<iframe width=\"200\" height=\"150\" src=\"https://www.youtube.com/embed/FtutLA63Cp8?feature=oembed\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture\" allowfullscreen title=\"【東方】Bad Apple!! ＰＶ【影絵】\"></iframe>"}}
+{
+  "status": "OK",
+  "data": {
+    "title": "【東方】Bad Apple!! ＰＶ【影絵】",
+    "author_name": "kasidid2",
+    "author_url": "https://www.youtube.com/user/kasidid2",
+    "type": "video",
+    "height": 150,
+    "width": 200,
+    "version": "1.0",
+    "provider_name": "YouTube",
+    "provider_url": "https://www.youtube.com/",
+    "thumbnail_height": 360,
+    "thumbnail_width": 480,
+    "thumbnail_url": "https://i.ytimg.com/vi/FtutLA63Cp8/hqdefault.jpg",
+    "html": "<iframe width=\"200\" height=\"150\" src=\"https://www.youtube.com/embed/FtutLA63Cp8?feature=oembed\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture\" allowfullscreen title=\"【東方】Bad Apple!! ＰＶ【影絵】\"></iframe>"
+  }
+}
 ```
 
 ## Compatibility
