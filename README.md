@@ -5,7 +5,7 @@ Lightweight, Restful oEmbed api server implementation.
 - Implementation of [oEmbed](https://oembed.com/).
 - Basic url validation. It can handle url only with `http` and `https` protocol.
 - Raises correspond errors to response via Http status code with messages, if any. \
-` e.g) BAD_REQUEST(MalformedURL, not valid URI), NOT_IMPLEMENTED(No content from URL, no providers found)`
+` e.g.) BAD_REQUEST(MalformedURL, not valid URI), NOT_IMPLEMENTED(No content from URL, no providers found)`
 - Automatically finds oEmbed data from given url, by parsing provider_url and url schemes.
 - Using up-to-date [providers.json](https://oembed.com/providers.json).
 
