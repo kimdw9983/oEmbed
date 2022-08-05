@@ -1,14 +1,9 @@
 package kimdw9983.oembed;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.http.ParseException;
-import org.apache.http.client.ClientProtocolException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
