@@ -54,5 +54,5 @@ then respond (body) will be like this:
 - Tested on <b>Java 8</b>. And it should work on higher version.
 
 ## TODO & ISSUE(sort of)
-- Custom exception handling, currently this uses random exceptions raised by internal logic.
 - [Instagram and some facebook content currently require credentials](https://developers.facebook.com/docs/instagram/oembed/) for responding oEmbed, supporting it.
+- Adding filter options(for better performance), including or excluding certain providers.
