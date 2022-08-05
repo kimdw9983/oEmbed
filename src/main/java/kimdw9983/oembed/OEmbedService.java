@@ -6,7 +6,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Iterator;
-import java.util.Map;
 
 import org.apache.commons.validator.routines.UrlValidator;
 import org.apache.http.HttpEntity;
@@ -17,7 +16,9 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -57,17 +58,17 @@ public class OEmbedService {
     providers = mapper.readTree(resource);
   }
   
-  public void validateURL(String url) throws MalformedURLException {
+  public void validateURL(String url) throws ResponseStatusException {
     if (!urlValidator.isValid(url)) {
       logger.debug("Malformed URL\t" + url);
-      throw new MalformedURLException("Malformed url. 잘못된 url형식 입니다.");
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Malformed url. 잘못된 url형식 입니다.");
     }
   }
   
-  public String getProvider(String raw) throws URISyntaxException, RuntimeException, Exception, IOException { //search from providers.json, is this autodiscovery btw?
+  public String getProvider(String raw) throws ResponseStatusException { //search from providers.json, is this autodiscovery btw?
     if (providers == null) {
       logger.error("[Fatal] No providers.json found.");
-      throw new RuntimeException("Fatal error occurred on server, please contact to developer. 서버에 심각한 오류가 발생하였습니다. 관리자에게 문의해주세요.");
+      throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Fatal error occurred on server, please contact to developer. 서버에 심각한 오류가 발생하였습니다. 관리자에게 문의해주세요.");
     }
     
     URL url;
@@ -79,7 +80,7 @@ public class OEmbedService {
       logger.debug("getProvider() constructed url\t" + url);
     } catch (URISyntaxException | MalformedURLException e) {
       logger.debug("Malformed URL \t" + raw);
-      throw new URISyntaxException(null, "Malformed URL. 형식에 맞지 않는 URL입력입니다.");
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Malformed URL. 형식에 맞지 않는 URL입력입니다.");
     }
 
     String result = null;
@@ -112,17 +113,15 @@ public class OEmbedService {
         }
       }
     } catch(Exception e) {
-      logger.error("Provider fetch failed");
-      logger.error(e.getMessage());
-      throw new IOException("Error occurred during fetching providers. 제공자 정보를 불러오는중에 오류가 발생했습니다.");
+      logger.error("Provider fetch failed\n{}", e.getMessage());
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred during fetching providers. 제공자 정보를 불러오는중에 오류가 발생했습니다.");
     }
 
     logger.debug("No provider found on URL\t" + raw);
-    throw new Exception("No provider found. 해당 url의 제공자가 없습니다.");
+    throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "No provider found. 해당 url의 제공자가 없습니다.");
   }
 
-  @SuppressWarnings("unchecked")
-  public Map<String, String> getOembedData(String provider, String url) throws ClientProtocolException, IOException, ParseException {
+  public JsonNode getOembedData(String provider, String url) throws ResponseStatusException {
     String request_url;
     if (provider.contains("*")) {
       request_url = provider.replace("*", url);
@@ -140,29 +139,18 @@ public class OEmbedService {
       entity = response.getEntity();
     } catch (IOException e) {
       logger.error("Error on recieving response data, provider " + provider + " url " + url);
-      logger.error(e.getMessage());
-      throw new IOException("Error recieving response data. 응답 데이터 수신중에 오류가 발생했습니다.");
+      logger.error("{}", e.getMessage());
+      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,"Error recieving response data. 응답 데이터 수신중에 오류가 발생했습니다.");
     }
-    if (entity == null) throw new ClientProtocolException("응답 데이터가 없습니다.");
+    if (entity == null) throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "응답 데이터가 없습니다.");
 
-    Map<String, String> data = null;
+    JsonNode data = null;
     try {
-      data = mapper.readValue(EntityUtils.toString(entity), Map.class);
+      data = mapper.readTree(EntityUtils.toString(entity));
     } catch (IOException e) {
       logger.debug("No content from given url\t" + url);
-      throw new ParseException("No content from given url. 해당 url에서 컨텐츠를 가져올 수 없습니다.");
+      throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "No content from given url. 해당 url에서 컨텐츠를 가져올 수 없습니다.");
     }
-    
-    /*
-     * OEmbedData data = null; //POJO방식의 데이터로 바인딩 할 경우
-     * try { 
-     * data = new OEmbedData();
-     * ObjectMapper mapper = new ObjectMapper(); 
-     * data = mapper.readValue(EntityUtils.toString(entity), OEmbedData.class);
-     * 
-     * } catch (JSONException | ParseException | IOException e) { throw new
-     * ParseException("응답 데이터를 처리하는중에 오류가 발생했습니다."); }
-     */
 
     return data;
   }

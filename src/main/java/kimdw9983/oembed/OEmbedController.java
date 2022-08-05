@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -19,6 +18,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 @RestController
 public class OEmbedController {
@@ -64,32 +66,22 @@ public class OEmbedController {
 
         try {
             OEmbedService.validateURL(url);
-        } catch (MalformedURLException e) {
-            return respond(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (ResponseStatusException e) {
+            return respond(e.getReason(), e.getStatus());
         };
         
         String provider;
         try {
             provider = OEmbedService.getProvider(url);
-        } catch (RuntimeException e) {
-            return respond(e.getMessage(), HttpStatus.SERVICE_UNAVAILABLE);
-        } catch (URISyntaxException e) {
-            return respond(e.getMessage(), HttpStatus.BAD_REQUEST);
-        } catch (IOException e) {
-            return respond(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        } catch (Exception e) {
-            return respond(e.getMessage(), HttpStatus.NOT_IMPLEMENTED);
+        } catch (ResponseStatusException e) {
+            return respond(e.getReason(), e.getStatus());
         }
         
-        Map<String, String> data = null;
+        JsonNode data = null;
         try {
             data = OEmbedService.getOembedData(provider, url);
-        } catch (ParseException e) {
-            return respond(e.getMessage(), HttpStatus.NOT_IMPLEMENTED);
-        } catch (ClientProtocolException e) {
-            return respond(e.getMessage(), HttpStatus.NOT_IMPLEMENTED);
-        }  catch (IOException e) {
-            return respond(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (ResponseStatusException e) {
+            return respond(e.getReason(), e.getStatus());
         } 
         
         return respond(data, HttpStatus.OK);
