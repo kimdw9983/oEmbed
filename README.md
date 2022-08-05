@@ -55,3 +55,4 @@ then respond (body) will be like this:
 
 ## TODO & ISSUE(sort of)
 - [Instagram and some facebook content currently require credentials](https://developers.facebook.com/docs/instagram/oembed/) for responding oEmbed, supporting it.
+- Adding filter options(for better performance), including or excluding certain providers.
