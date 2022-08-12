@@ -59,7 +59,7 @@ public class OEmbedService {
   public void validateURL(String url) throws ResponseStatusException {
     if (!urlValidator.isValid(url)) {
       logger.debug("Malformed URL\t" + url);
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Malformed url. 잘못된 url형식 입니다.");
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Malformed url. 잘못된 url형식 입니다.\n Url must contain protocol(https://) field.");
     }
   }
   
@@ -78,7 +78,7 @@ public class OEmbedService {
       logger.debug("getProvider() constructed url\t" + url);
     } catch (URISyntaxException | MalformedURLException e) {
       logger.debug("Malformed URL \t" + raw);
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Malformed URL. 형식에 맞지 않는 URL입력입니다.");
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Malformed URL. 잘못된 url형식 입니다.");
     }
 
     String result = null;
