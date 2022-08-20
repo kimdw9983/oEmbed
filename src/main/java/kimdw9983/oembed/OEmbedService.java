@@ -58,7 +58,7 @@ public class OEmbedService {
   
   public void validateURL(String url) throws ResponseStatusException {
     if (!urlValidator.isValid(url)) {
-      logger.debug("Malformed URL\t" + url);
+      logger.info("Malformed URL\t" + url);
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Malformed url. 잘못된 url형식 입니다.\n Url must contain protocol(https://) field.");
     }
   }
@@ -71,13 +71,13 @@ public class OEmbedService {
     
     URL url;
     URI uri;
-    logger.debug("getProvider() raw \t" + raw);
+    logger.info("getProvider() raw \t" + raw);
     try {
       uri = new URI(raw);
       url = new URL(uri.getScheme(), uri.getHost(), uri.getPort(), "/");
-      logger.debug("getProvider() constructed url\t" + url);
+      logger.info("getProvider() constructed url\t" + url);
     } catch (URISyntaxException | MalformedURLException e) {
-      logger.debug("Malformed URL \t" + raw);
+      logger.info("Malformed URL \t" + raw);
       throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Malformed URL. 잘못된 url형식 입니다.");
     }
 
@@ -96,7 +96,7 @@ public class OEmbedService {
               String re = scheme.replace(".{format}", ".json").replace("/", "\\/").replace("*", ".*");
               if (!uriString.matches(re)) continue;
               
-              logger.debug("getProvider() provider found\t" + endpoint.get("url"));
+              logger.info("getProvider() provider found\t" + endpoint.get("url"));
               result = endpoint.get("url").asText();
               return result;
             }
@@ -104,7 +104,7 @@ public class OEmbedService {
             String re = provider_node.get("provider_url").asText();
             if (!uriString.matches(re)) continue;
             
-            logger.debug("getProvider() provider without scheme, found\t" + endpoint.get("url"));
+            logger.info("getProvider() provider without scheme, found\t" + endpoint.get("url"));
             result = endpoint.get("url").asText();
             return result;
           }
@@ -115,7 +115,7 @@ public class OEmbedService {
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred during fetching providers. 제공자 정보를 불러오는중에 오류가 발생했습니다.");
     }
 
-    logger.debug("No provider found on URL\t" + raw);
+    logger.info("No provider found on URL\t" + raw);
     throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "No provider found. 해당 url의 제공자가 없습니다.");
   }
 
@@ -127,7 +127,7 @@ public class OEmbedService {
       provider = provider.replace("{format}", "json");
       request_url = provider + (provider.endsWith("/") ? url : "?url=" + url);
     }
-    logger.debug("request url\t" + request_url);
+    logger.info("request url\t" + request_url);
 
     HttpEntity entity = null;
     try {
@@ -146,7 +146,7 @@ public class OEmbedService {
     try {
       data = mapper.readTree(EntityUtils.toString(entity));
     } catch (IOException e) {
-      logger.debug("No content from given url\t" + url);
+      logger.info("No content from given url\t" + url);
       throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "No content from given url. 해당 url에서 컨텐츠를 가져올 수 없습니다.");
     }
 
